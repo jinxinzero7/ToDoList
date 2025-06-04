@@ -9,12 +9,18 @@ namespace ToDoList.Controllers
     [Route("[controller]")]
     public class ToDoController : ControllerBase
     {
-        ToDoTaskList list = ToDoTaskList.GetInstance();
+        private readonly ToDoContext _context;
+        public ToDoController(ToDoContext context)
+        {
+            _context = context;
+        }
+
         [HttpGet("GetTasks")]
         public IActionResult Get() 
         {
-            if(list.Tasks.Count == 0) return NotFound();
-            return Ok(list.Tasks);
+            var tasks = _context.ToDoItems.ToList();
+            if(tasks.Count == 0) return NotFound();
+            return Ok(tasks);
         }
 
         [HttpPost("AddTask")]
@@ -24,51 +30,38 @@ namespace ToDoList.Controllers
             ToDoItem item = new ToDoItem();
             item.Text = text;
             item.Id = Guid.NewGuid();
-            list.Tasks.Add(item);
+            _context.ToDoItems.Add(item);
+            _context.SaveChanges();
             return Ok();
         }
 
         [HttpGet("{id}")]
         public IActionResult Get(Guid id) 
         {
-            if(list.Tasks.Any(task => task.Id == id))
-            {
-                return Ok(list.Tasks.FirstOrDefault(t => t.Id == id));
-            }
-            else
-            {
-                return NotFound();
-            }
+            var task = _context.ToDoItems.FirstOrDefault(t => t.Id == id);
+            if (task == null) return NotFound();
+            return Ok(task);
         }
 
         [HttpPut("{id}")]
         public IActionResult Put(Guid id, [FromBody] string text)
         {
-            if (list.Tasks.Any(task => task.Id == id))
-            {
-                var task = list.Tasks.Single(t => t.Id == id);
-                task.Text = text;
-                return NoContent();
-            }
-            else
-            {
-                return NotFound();
-            }
+            if (text == "") return BadRequest();
+            var task = _context.ToDoItems.FirstOrDefault(t => t.Id == id);
+            if (task == null) return NotFound();
+            task.Text = text;
+            _context.SaveChanges();
+            return NoContent();
         }
 
         [HttpDelete("{id}")]
         public IActionResult Delete(Guid id)
         {
-            if (list.Tasks.Any(task => task.Id == id))
-            {
-                var task = list.Tasks.Single(t => t.Id == id);
-                list.Tasks.Remove(task);
-                return NoContent();
-            }
-            else
-            {
-                return NotFound();
-            }
+            var task = _context.ToDoItems.FirstOrDefault(t => t.Id == id);
+            if (task == null) return NotFound();
+            _context.ToDoItems.Remove(task);
+            _context.SaveChanges();
+            return NoContent();
         }
 
     }

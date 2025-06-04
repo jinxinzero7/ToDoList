@@ -2,6 +2,7 @@
 
 public class ToDoTaskList
 {
+    /*
     private static ToDoTaskList _instance;
     private static readonly object _lock = new object();
 
@@ -23,4 +24,5 @@ public class ToDoTaskList
         }
         return _instance;
     }
+    */
 }
